@@ -1,8 +1,8 @@
 public interface AbstractFactory
 {
     Ordinary_Rabbit createOrdinary();
-    Ordinary_Rabbit createOrdinary(int x, int y);
+    Ordinary_Rabbit createOrdinary(float x, float y);
 
     Albino createAlbino();
-    Albino createAlbino(int x, int y);
+    Albino createAlbino(float x, float y);
 }

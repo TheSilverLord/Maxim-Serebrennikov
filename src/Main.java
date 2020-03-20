@@ -9,7 +9,6 @@ public class Main
 {
     public static void main(String[] args)
     {
-        Habitat.createGUI();
-        Habitat.Update();
+        Habitat habitat = new Habitat();
     }
 }
