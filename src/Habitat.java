@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -10,7 +11,8 @@ import javax.swing.event.MenuListener;
 
 public class Habitat
 {
-    private Image image;
+    BufferedImage fieldImage;
+    private static BufferedImage image;
     private int width = 1280;
     private int height = 720;
     private Timer timer;
@@ -52,43 +54,58 @@ public class Habitat
 
         JCheckBox show_info = new JCheckBox("Показывать информацию");
         show_info.setSelected(bool_show_info);
+        show_info.setFocusable(false);
         JButton start = new JButton("Старт");
         JButton stop = new JButton("Стоп");
         stop.setEnabled(false);
+        start.setFocusable(false);
+        stop.setFocusable(false);
         ButtonGroup sim_time = new ButtonGroup();
         JRadioButton show, hide;
         show = new JRadioButton("Показывать время симуляции", true);
         sim_time.add(show);
+        show.setFocusable(false);
         hide = new JRadioButton("Скрывать время симуляции");
         sim_time.add(hide);
+        hide.setFocusable(false);
         JTextArea time_text = new JTextArea();
         time_text.setFont(new Font("TimesRoman", Font.ITALIC, 14));
         time_text.setText("Время: " + (time/1000) + " секунд(ы)");
         time_text.setEditable(false);
+        time_text.setFocusable(false);
         JTextArea mark1 = new JTextArea();
         mark1.setFont(new Font("TimesRoman", Font.ITALIC, 14));
         mark1.setText("Период рождения обычного кролика");
         mark1.setEditable(false);
+        mark1.setFocusable(false);
         JTextArea mark2 = new JTextArea();
         mark2.setFont(new Font("TimesRoman", Font.ITALIC, 14));
         mark2.setText("Период рождения альбиноса");
         mark2.setEditable(false);
+        mark2.setFocusable(false);
         JTextArea mark3 = new JTextArea();
         mark3.setFont(new Font("TimesRoman", Font.ITALIC, 14));
         mark3.setText("Вероятность рождения обычного кролика");
         mark3.setEditable(false);
+        mark3.setFocusable(false);
         TextField ordinary_period = new TextField("", 10);
         TextField albino_period = new TextField("", 10);
         JComboBox pcb = new JComboBox();
         for (int i = 10; i <= 100; i += 10)
             pcb.addItem((double)i/100.0);
+        pcb.setFocusable(false);
 
+        // Главное меню
         JMenuBar mainMenu = new JMenuBar();
         JMenu simMenu = new JMenu("Симуляция");
+        JMenuItem startMI = new JMenuItem("Старт");
+        simMenu.add(startMI);
+        JMenuItem stopMI = new JMenuItem("Стоп");
+        simMenu.add(stopMI);
+
         JMenu settingsMenu = new JMenu("Параметры");
-        simMenu.add(new JMenuItem("Старт"));
-        simMenu.add(new JMenuItem("Стоп"));
-        settingsMenu.add(new JCheckBoxMenuItem("Показывать информацию"));
+        JCheckBoxMenuItem showinfoMI = new JCheckBoxMenuItem("Показывать информацию");
+        settingsMenu.add(showinfoMI);
         settingsMenu.addSeparator();
         ButtonGroup timesetMenu = new ButtonGroup();
         JRadioButtonMenuItem mshow = new JRadioButtonMenuItem("Показывать время симуляции", true);
@@ -100,12 +117,22 @@ public class Habitat
         mainMenu.add(simMenu);
         mainMenu.add(settingsMenu);
 
-        show_info.addItemListener(e -> bool_show_info = ((JCheckBox)e.getItem()).isSelected());
+        // Слушатели
+        show_info.addItemListener(e -> {
+            bool_show_info = ((JCheckBox)e.getItem()).isSelected();
+            showinfoMI.setSelected(bool_show_info);
+        });
         pcb.addItemListener(e -> P1 = (double)pcb.getSelectedItem());
         start.addActionListener(e -> startMethod(container));
         stop.addActionListener(e -> stopMethod(container));
-        show.addActionListener(e -> time_text.setVisible(true));
-        hide.addActionListener(e -> time_text.setVisible(false));
+        show.addActionListener(e -> {
+            time_text.setVisible(true);
+            mshow.setSelected(true);
+        });
+        hide.addActionListener(e -> {
+            time_text.setVisible(false);
+        mhide.setSelected(true);
+        });
         ordinary_period.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -116,6 +143,7 @@ public class Habitat
                     if (a > 0)
                         N1 = a;
                     else throw new NumberFormatException();
+                    frame.requestFocus();
                 }
                 catch (NumberFormatException nfe)
                 {
@@ -145,6 +173,7 @@ public class Habitat
                     if (a > 0)
                         N2 = a;
                     else throw new NumberFormatException();
+                    frame.requestFocus();
                 }
                 catch (NumberFormatException nfe)
                 {
@@ -164,35 +193,33 @@ public class Habitat
                 }
             }
         });
-        simMenu.addActionListener(new ActionListener() {
+        startMI.addActionListener(e -> {
+            startMethod(container);
+            frame.requestFocus();
+        });
+        stopMI.addActionListener(e -> {
+            stopMethod(container);
+            frame.requestFocus();
+        });
+        showinfoMI.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String str = e.getActionCommand();
-                if(str.equals("Старт")) startMethod(container);
-                if(str.equals("Стоп")) stopMethod(container);
+                bool_show_info = ((JCheckBoxMenuItem)e.getSource()).isSelected();
+                show_info.setSelected(bool_show_info);
             }
         });
-        settingsMenu.addActionListener(new ActionListener() {
+        mshow.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String str = e.getActionCommand();
-                if(str.equals("Показывать информацию"))
-                {
-                    bool_show_info = ((JCheckBoxMenuItem)e.getSource()).isSelected();
-                    show_info.setSelected(bool_show_info);
-                }
-                if(str.equals("Показывать время симуляции"))
-                {
-                    time_text.setVisible(true);
-                    show.setSelected(true);
-                    hide.setSelected(false);
-                }
-                if(str.equals("Скрывать время симуляции"))
-                {
-                    time_text.setVisible(false);
-                    hide.setSelected(true);
-                    show.setSelected(false);
-                }
+                time_text.setVisible(true);
+                show.setSelected(true);
+            }
+        });
+        mhide.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                time_text.setVisible(false);
+                hide.setSelected(true);
             }
         });
 
@@ -217,6 +244,7 @@ public class Habitat
         frame.pack();
         frame.setResizable(false);
         frame.setVisible(true);
+        frame.requestFocus();
 
         frame.addKeyListener(new KeyAdapter()
         {
@@ -240,8 +268,17 @@ public class Habitat
                     case KeyEvent.VK_T:
                     {
                         if (time_text.isVisible())
+                        {
                             time_text.setVisible(false);
-                        else time_text.setVisible(true);
+                            hide.setSelected(true);
+                            mhide.setSelected(true);
+                        }
+                        else
+                        {
+                            time_text.setVisible(true);
+                            show.setSelected(true);
+                            mshow.setSelected(true);
+                        }
                         break;
                     }
                 }
@@ -251,7 +288,6 @@ public class Habitat
 
     private void Update(long time, Graphics g, JPanel field)
     {
-        g.drawImage(image,0,0,null);
         if (time % N1 == 0)
         {
             if (Math.random() < P1)
@@ -269,8 +305,15 @@ public class Habitat
                 count++;
             }
         }
+
+        //Двойная буфферизация в BufferedImage (устранение мерцания)
+        int w = field.getWidth(), h = field.getHeight();
+        fieldImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        Graphics fieldImageGraphics= fieldImage.getGraphics();
+        fieldImageGraphics.drawImage(image, 0,0, w, h,null);
         for (int i = 0; i < count; i++)
-            g.drawImage(array[i].getImage(), (int) array[i].getX(), (int) array[i].getY(), null);
+            fieldImageGraphics.drawImage(array[i].getImage(), (int)(array[i].getX()),(int)(array[i].getY()), null);
+        g.drawImage(fieldImage,0,0,w,h,null);
     }
 
     private void startMethod(Container container)
