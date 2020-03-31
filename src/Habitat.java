@@ -1,13 +1,39 @@
+import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
-import javax.swing.*;
-import javax.imageio.*;
-import javax.swing.event.MenuEvent;
-import javax.swing.event.MenuListener;
+
+class Singleton
+{
+    private static Singleton instance;
+    private Singleton(){}
+    public static Singleton getInstance()
+    {
+        if(instance == null)
+            instance = new Singleton();
+        return instance;
+    }
+
+    private Rabbit[] array = new Rabbit[1000];
+
+    public void add(Rabbit rabbit, int count)
+    {
+        array[count] = rabbit;
+    }
+
+    public Rabbit getRabbit(int i)
+    {
+        return array[i];
+    }
+}
 
 public class Habitat
 {
@@ -24,7 +50,7 @@ public class Habitat
     int N1; // Период рождения обычного кролика
     double P1; // Вероятность рождения обычного кролика
     int N2, K; // Период рождения альбиноса и процент от общего количества кроликов
-    Rabbit[] array;
+    Singleton array = Singleton.getInstance();
     int count;
 
     public Habitat()
@@ -34,7 +60,6 @@ public class Habitat
         N2 = 3000;
         K = 20;
         count = 0;
-        array = new Rabbit[1000];
 
         try
         {
@@ -292,7 +317,7 @@ public class Habitat
         {
             if (Math.random() < P1)
             {
-                array[count] = factory.createOrdinary((float)(Math.random() * (field.getWidth() - 58)),(float)(Math.random() * (field.getHeight() - 104)));
+                array.add(factory.createOrdinary((float)(Math.random() * (field.getWidth() - 58)),(float)(Math.random() * (field.getHeight() - 104))), count);
                 count++;
             }
         }
@@ -301,7 +326,7 @@ public class Habitat
             double p = (double) (K * count) / 100;
             if ((double)Albino.count < p)
             {
-                array[count] = factory.createAlbino((float)(Math.random() * (field.getWidth() - 79)), (float)(Math.random() * (field.getHeight() - 128)));
+                array.add(factory.createAlbino((float)(Math.random() * (field.getWidth() - 79)), (float)(Math.random() * (field.getHeight() - 128))), count);
                 count++;
             }
         }
@@ -312,7 +337,7 @@ public class Habitat
         Graphics fieldImageGraphics= fieldImage.getGraphics();
         fieldImageGraphics.drawImage(image, 0,0, w, h,null);
         for (int i = 0; i < count; i++)
-            fieldImageGraphics.drawImage(array[i].getImage(), (int)(array[i].getX()),(int)(array[i].getY()), null);
+            fieldImageGraphics.drawImage((array.getRabbit(i)).getImage(), (int)((array.getRabbit(i)).getX()),(int)((array.getRabbit(i)).getY()), null);
         g.drawImage(fieldImage,0,0,w,h,null);
     }
 
