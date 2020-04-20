@@ -2,10 +2,12 @@ import java.awt.image.BufferedImage;
 
 public abstract class Rabbit implements IBehaviour
 {
-    float x;
-    float y;
+    int x;
+    int y;
     long birthtime;
     int ID;
+    int orientation;
+    char type;
 
     public abstract BufferedImage getImage();
     public abstract void setBirthtime(long time);
