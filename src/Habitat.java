@@ -72,6 +72,7 @@ class Singleton_HashMap
 
 public class Habitat
 {
+    JPanel field = new JPanel();
     BufferedImage fieldImage;
     private static BufferedImage image;
     int width = 1366;
@@ -112,7 +113,6 @@ public class Habitat
 
         JFrame frame = new JFrame("Rabbits Simulation");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        JPanel field = new JPanel();
         JPanel controlPanel = new JPanel();
         JPanel ordAIbuttons = new JPanel();
         JPanel albAIbuttons = new JPanel();
@@ -526,59 +526,62 @@ public class Habitat
         });
     }
 
-    private void Update(long time, Graphics g, JPanel field)
+    public synchronized void generate(long time, JPanel field)
     {
-        synchronized (rabbitVector)
+        for (int i = 0; i < count; i++)
         {
-            for (int i = 0; i < count; i++)
+            if ((rabbitVector.getRabbit(i).birthtime + rabbitVector.getRabbit(i).getLifetime()) <= time)
             {
-                if ((rabbitVector.getRabbit(i).birthtime + rabbitVector.getRabbit(i).getLifetime()) <= time)
-                {
-                    int id = rabbitVector.getRabbit(i).ID;
-                    timeHashMap.remove(id);
-                    ID_tree.remove(id);
-                    rabbitVector.getRabbit(i).die();
-                    rabbitVector.remove(i);
-                    count--;
-                }
-            }
-
-            if (time % N1 == 0)
-            {
-                if (Math.random() < P1)
-                {
-                    Rabbit rabbit = factory.createOrdinary((int)(Math.random() * (field.getWidth() - 58)),(int)(Math.random() * (field.getHeight() - 104)), time);
-                    ID_tree.add(rabbit);
-                    rabbitVector.add(rabbit);
-                    timeHashMap.add(rabbit);
-                    count++;
-                }
-            }
-            if (time % N2 == 0)
-            {
-                double p = (double) (K * count) / 100;
-                if ((double)Albino.count < p)
-                {
-                    Rabbit rabbit = factory.createAlbino((int)(Math.random() * (field.getWidth() - 79)),(int)(Math.random() * (field.getHeight() - 128)), time);
-                    ID_tree.add(rabbit);
-                    rabbitVector.add(rabbit);
-                    timeHashMap.add(rabbit);
-                    count++;
-                }
+                int id = rabbitVector.getRabbit(i).ID;
+                timeHashMap.remove(id);
+                ID_tree.remove(id);
+                rabbitVector.getRabbit(i).die();
+                rabbitVector.remove(i);
+                count--;
             }
         }
 
-        synchronized (rabbitVector)
+        if (time % N1 == 0)
         {
-            //Двойная буфферизация в BufferedImage (устранение мерцания)
-            int w = field.getWidth(), h = field.getHeight();
-            fieldImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-            Graphics fieldImageGraphics= fieldImage.getGraphics();
-            fieldImageGraphics.drawImage(image, 0,0, w, h,null);
-            for (int i = 0; i < count; i++)
-                fieldImageGraphics.drawImage((rabbitVector.getRabbit(i)).getImage(), (rabbitVector.getRabbit(i)).getX(),(rabbitVector.getRabbit(i)).getY(), null);
-            g.drawImage(fieldImage,0,0,w,h,null);
+            if (Math.random() < P1)
+            {
+                Rabbit rabbit = factory.createOrdinary((int)(Math.random() * (field.getWidth() - 58)),(int)(Math.random() * (field.getHeight() - 104)), time);
+                ID_tree.add(rabbit);
+                rabbitVector.add(rabbit);
+                timeHashMap.add(rabbit);
+                count++;
+            }
         }
+        if (time % N2 == 0)
+        {
+            double p = (double) (K * count) / 100;
+            if ((double)Albino.count < p)
+            {
+                Rabbit rabbit = factory.createAlbino((int)(Math.random() * (field.getWidth() - 79)),(int)(Math.random() * (field.getHeight() - 128)), time);
+                ID_tree.add(rabbit);
+                rabbitVector.add(rabbit);
+                timeHashMap.add(rabbit);
+                count++;
+            }
+        }
+    }
+
+    public synchronized void draw(Graphics g, JPanel field)
+    {
+        //Двойная буфферизация в BufferedImage (устранение мерцания)
+        int w = field.getWidth(), h = field.getHeight();
+        fieldImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        Graphics fieldImageGraphics= fieldImage.getGraphics();
+        fieldImageGraphics.drawImage(image, 0,0, w, h,null);
+        for (int i = 0; i < count; i++)
+            fieldImageGraphics.drawImage((rabbitVector.getRabbit(i)).getImage(), (rabbitVector.getRabbit(i)).getX(),(rabbitVector.getRabbit(i)).getY(), null);
+        g.drawImage(fieldImage,0,0,w,h,null);
+    }
+
+    private synchronized void Update(long time, Graphics g, JPanel field)
+    {
+        generate(time,field);
+        draw(g, field);
     }
 
     private void startMethod(Container container)

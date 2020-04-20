@@ -1,8 +1,8 @@
 
 public class OrdinaryAI extends BaseAI
 {
-    int speed = 6;
-    long N = 10000;
+    int speed = 4;
+    long N = 5000;
 
     public OrdinaryAI(Habitat h)
     {
@@ -56,6 +56,7 @@ public class OrdinaryAI extends BaseAI
                         rabbit.setOrientation((int)(Math.random()*8));
                 }
             }
+            habitat.draw(habitat.field.getGraphics(), habitat.field);
         }
     }
 }

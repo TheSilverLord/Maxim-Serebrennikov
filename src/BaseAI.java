@@ -9,21 +9,21 @@ public abstract class BaseAI extends Thread
         int x, y;
         x = rabbit.getX();
         y = rabbit.getY();
-        if (x + rabbit.getImage().getWidth() >= habitat.width)
+        if (x + rabbit.getImage().getWidth() >= habitat.field.getWidth())
             rabbit.orientation = 0; // влево
         if (x <= 0)
             rabbit.orientation = 1; // вправо
-        if (y + rabbit.getImage().getHeight() >= habitat.height)
+        if (y + rabbit.getImage().getHeight() >= habitat.field.getHeight())
             rabbit.orientation = 3; // вверх
         if (y <= 0)
             rabbit.orientation = 2; // вниз
-        if ((x <= 0) && (y + rabbit.getImage().getHeight() >= habitat.height))
+        if ((x <= 0) && (y + rabbit.getImage().getHeight() >= habitat.field.getHeight()))
             rabbit.orientation = 4; // вверх вправо
         if ((x <= 0) && (y <= 0))
             rabbit.orientation = 5; // вниз вправо
-        if ((x + rabbit.getImage().getWidth() >= habitat.width) && (y <= 0))
+        if ((x + rabbit.getImage().getWidth() >= habitat.field.getWidth()) && (y <= 0))
             rabbit.orientation = 6; // вниз влево
-        if ((x + rabbit.getImage().getWidth() >= habitat.width) && (y + rabbit.getImage().getHeight() >= habitat.height))
+        if ((x + rabbit.getImage().getWidth() >= habitat.field.getWidth()) && (y + rabbit.getImage().getHeight() >= habitat.field.getHeight()))
             rabbit.orientation = 7; // вверх влево
     }
 }

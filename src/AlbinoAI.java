@@ -1,7 +1,7 @@
 
 public class AlbinoAI extends BaseAI
 {
-    int speed = 10;
+    int speed = 6;
 
     public AlbinoAI(Habitat h)
     {
@@ -25,6 +25,7 @@ public class AlbinoAI extends BaseAI
                     rabbit.setX(x);
                 }
             }
+            habitat.draw(habitat.field.getGraphics(), habitat.field);
         }
     }
 }
