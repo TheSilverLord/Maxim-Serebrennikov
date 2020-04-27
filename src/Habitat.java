@@ -411,39 +411,37 @@ public class Habitat
         stopOrdinaryAI.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try
+                synchronized (ordinaryAI)
                 {
-                    ordinaryAI.wait();
-                }
-                catch (InterruptedException ex)
-                {
-                    ex.printStackTrace();
+                    ordinaryAI.stopAnimation();
                 }
             }
         });
         resumeOrdinaryAI.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                ordinaryAI.notify();
+                synchronized (ordinaryAI)
+                {
+                    ordinaryAI.resumeAnimation();
+                }
             }
         });
         stopAlbinoAI.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                try
+            public synchronized void actionPerformed(ActionEvent e) {
+                synchronized (albinoAI)
                 {
-                    albinoAI.wait();
-                }
-                catch (InterruptedException ex)
-                {
-                    ex.printStackTrace();
+                    albinoAI.stopAnimation();
                 }
             }
         });
         resumeAlbinoAI.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                albinoAI.notify();
+            public synchronized void actionPerformed(ActionEvent e) {
+                synchronized (albinoAI)
+                {
+                    albinoAI.resumeAnimation();
+                }
             }
         });
 

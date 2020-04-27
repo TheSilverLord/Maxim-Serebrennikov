@@ -4,7 +4,7 @@ public interface IBehaviour
 
     void setY(int y);
 
-    void setOrientation(int orientation);
+    void setOrientation(Rabbit.Orientation orientation);
 
     int getX();
 

@@ -6,7 +6,8 @@ public abstract class Rabbit implements IBehaviour
     int y;
     long birthtime;
     int ID;
-    int orientation;
+    enum Orientation { LEFT, RIGHT, BOTTOM, TOP, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, TOP_LEFT }
+    Orientation orientation;
     char type;
 
     public abstract BufferedImage getImage();

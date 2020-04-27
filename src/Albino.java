@@ -14,7 +14,7 @@ public class Albino extends Rabbit
     {
         setX(0);
         setY(0);
-        setOrientation(1);
+        setOrientation(Orientation.values()[1]);
         setBirthtime(0);
         setID(0);
         type = 'a';
@@ -34,7 +34,7 @@ public class Albino extends Rabbit
     {
         setX(x);
         setY(y);
-        setOrientation((int)(Math.random()*2));
+        setOrientation(Orientation.values()[(int)(Math.random()*2)]);
         setBirthtime(time);
         setID((int)(Math.random()*1000));
         type = 'a';
@@ -66,7 +66,7 @@ public class Albino extends Rabbit
     @Override
     public void setY(int y) {this.y = y;}
     @Override
-    public void setOrientation(int orientation) { this.orientation = orientation; }
+    public void setOrientation(Orientation orientation) { this.orientation = orientation; }
     @Override
     public int getX() {return x;}
     @Override
