@@ -4,6 +4,7 @@ public class OrdinaryAI extends BaseAI
     int speed = 4;
     long N = 5000;
     boolean isStopped = false;
+    long prevtime = 0;
 
     public OrdinaryAI(Habitat h)
     {
@@ -65,10 +66,11 @@ public class OrdinaryAI extends BaseAI
                             }
                             rabbit.setX(x);
                             rabbit.setY(y);
-                            if (habitat.time % N == 0)
+                            if ((habitat.time % N == 0)&&(habitat.time / N != prevtime))
                                 rabbit.setOrientation(Rabbit.Orientation.values()[(int)(Math.random()*8)]);
                         }
                     }
+                    prevtime = habitat.time / N;
                     habitat.draw(habitat.field.getGraphics(), habitat.field);
                 }
             }
