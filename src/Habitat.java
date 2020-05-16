@@ -87,6 +87,11 @@ class TextAreaConsole extends TextArea implements Runnable
 
     PipedWriter getOutputStream() { return pipedWriter; }
     PipedReader getInputStream() { return pipedReader; }
+    void closeStreams() throws IOException
+    {
+        pipedReader.close();
+        pipedWriter.close();
+    }
 
     @Override
     public void run()
@@ -174,9 +179,33 @@ public class Habitat
 
     public Habitat()
     {
-        N1 = 2000;
-        P1 = 0.7;
-        N2 = 3000;
+        try
+        {
+            FileReader config_reader = new FileReader("./src/config.txt");
+            Scanner scanner = new Scanner(config_reader);
+            if (scanner.hasNextLine()) N1 = Integer.parseInt(scanner.nextLine());
+            else throw new FileNotFoundException();
+            if (scanner.hasNextLine()) P1 = Double.parseDouble(scanner.nextLine());
+            else throw new FileNotFoundException();
+            if (scanner.hasNextLine()) N2 = Integer.parseInt(scanner.nextLine());
+            else throw new FileNotFoundException();
+            if (scanner.hasNextLine()) Ordinary_Rabbit.lifetime = Long.parseLong(scanner.nextLine());
+            else throw new FileNotFoundException();
+            if (scanner.hasNextLine()) Albino.lifetime = Long.parseLong(scanner.nextLine());
+            else throw new FileNotFoundException();
+            config_reader.close();
+        }
+        catch (NumberFormatException nfe)
+        {
+            nfe.printStackTrace();
+        }
+        catch (Exception e)
+        {
+            N1 = 2000;
+            P1 = 0.7;
+            N2 = 3000;
+        }
+
         K = 20;
         reducePrcnt = 0;
         count = 0;
@@ -514,6 +543,18 @@ public class Habitat
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
+                console.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+                        try {
+                            pr.close();
+                            pw.close();
+                            textArea.closeStreams();
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
             }
         });
         stopOrdinaryAI.addActionListener(new ActionListener() {
@@ -627,6 +668,26 @@ public class Habitat
                         }
                         break;
                     }
+                }
+            }
+        });
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                try
+                {
+                    FileWriter config_writer;
+                    File config = new File("./src/config.txt");
+                    if (config.exists()) config_writer = new FileWriter("./src/config.txt");
+                    else if (config.mkdir()) config_writer = new FileWriter("./src/config.txt");
+                    else throw new IOException();
+
+                    config_writer.write(N1 +"\n"+ P1 +"\n"+ N2 +"\n"+ Ordinary_Rabbit.lifetime +"\n"+ Albino.lifetime);
+                    config_writer.close();
+                }
+                catch (IOException ex)
+                {
+                    ex.printStackTrace();
                 }
             }
         });
@@ -774,9 +835,9 @@ public class Habitat
                 if (cn != 0) reducePrcnt = consoleReadCommand((char)cn);
             }
         }
-        catch (IOException e)
+        catch (IOException ignored)
         {
-            e.printStackTrace();
+
         }
     }
 
