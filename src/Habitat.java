@@ -3,8 +3,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.Timer;
 
@@ -70,6 +69,81 @@ class Singleton_HashMap
     public Set values() { return timeHMap.entrySet(); }
 }
 
+class TextAreaConsole extends TextArea implements Runnable
+{
+    private PipedWriter pipedWriter;
+    private PipedReader pipedReader;
+
+    TextAreaConsole()
+    {
+        super();
+        setFont(new Font("TimesRoman", Font.ITALIC, 16));
+        setForeground(Color.GREEN);
+        setBackground(Color.BLACK);
+        setEditable(true);
+        pipedWriter = new PipedWriter();
+        pipedReader = new PipedReader();
+    }
+
+    PipedWriter getOutputStream() { return pipedWriter; }
+    PipedReader getInputStream() { return pipedReader; }
+
+    @Override
+    public void run()
+    {
+        try
+        {
+            char[] protocol = new char[83];
+            pipedReader.read(protocol);
+            protocol[82] = '\n';
+            String s = new String(protocol);
+            setText(s);
+            setCaretPosition(82);
+            this.addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    super.keyPressed(e);
+                    int keyCode = e.getKeyCode();
+                    if (keyCode == KeyEvent.VK_ENTER)
+                    {
+                        if (!getText().equals(s))
+                        {
+                            String[] command = getText().split("\n");
+                            try {
+                                pipedWriter.write(command[command.length - 1].toCharArray());
+                                Response();
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    void Response()
+    {
+        try
+        {
+            char[] response = new char[72];
+            pipedReader.read(response);
+            response[71] = '\n';
+            String s = new String(response);
+            setText(s);
+            setCaretPosition(71);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+}
+
 public class Habitat
 {
     JPanel field = new JPanel();
@@ -85,7 +159,7 @@ public class Habitat
     AbstractFactory factory = new RabbitFactory();
     int N1; // Период рождения обычного кролика
     double P1; // Вероятность рождения обычного кролика
-    int N2, K; // Период рождения альбиноса и процент от общего количества кроликов
+    int N2, K, reducePrcnt; // Период рождения альбиноса, процент от общего количества кроликов и процент для уменьшения количества альбиносов
     Singleton_Vector rabbitVector = Singleton_Vector.getInstance();
     Singleton_TreeSet ID_tree = Singleton_TreeSet.getInstance();
     Singleton_HashMap timeHashMap = Singleton_HashMap.getInstance();
@@ -94,13 +168,19 @@ public class Habitat
     AlbinoAI albinoAI = null;
     OrdinaryAI ordinaryAI = null;
 
+    TextAreaConsole textArea;
+    PipedReader pr;
+    PipedWriter pw;
+
     public Habitat()
     {
         N1 = 2000;
         P1 = 0.7;
         N2 = 3000;
         K = 20;
+        reducePrcnt = 0;
         count = 0;
+        pr = new PipedReader();
 
         try
         {
@@ -221,6 +301,9 @@ public class Habitat
         timesetMenu.add(mhide);
         settingsMenu.add(mshow);
         settingsMenu.add(mhide);
+        settingsMenu.addSeparator();
+        JMenuItem consoleMI = new JMenuItem("Консоль");
+        settingsMenu.add(consoleMI);
         mainMenu.add(simMenu);
         mainMenu.add(settingsMenu);
 
@@ -408,6 +491,31 @@ public class Habitat
                 hide.setSelected(true);
             }
         });
+        consoleMI.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JDialog console = new JDialog();
+                console.setTitle("Консоль");
+                console.setModal(false);
+                console.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                textArea = new TextAreaConsole();
+                Container c = console.getContentPane();
+                c.add(textArea);
+                console.pack();
+                console.setVisible(true);
+
+                try
+                {
+                    pr = new PipedReader(textArea.getOutputStream());
+                    pw = new PipedWriter(textArea.getInputStream());
+                    new Thread(textArea).start();
+                    String s = "Введите номер команды и параметр через пробел\n1. Сократить число альбиносов на N%\n";
+                    pw.write(s.toCharArray());
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
         stopOrdinaryAI.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -524,7 +632,60 @@ public class Habitat
         });
     }
 
-    public synchronized void generate(long time, JPanel field)
+    public synchronized int consoleReadCommand(char commandNum)
+    {
+        int N = 0;
+        try
+        {
+            char[] command = new char[5];
+            pr.read(command);
+            String scom = new String(command);
+            String[] spltdscom = scom.split(" ");
+            if (commandNum == '1')
+            {
+                try
+                {
+                    char[] c = spltdscom[spltdscom.length - 1].toCharArray();
+                    char[] n = new char[3];
+                    int i1 = 0;
+                    for (char i : c)
+                    {
+                        if ((int)i != 0)
+                        {
+                            n[i1] = i;
+                            i1++;
+                        }
+                    }
+                    char[] n1 = new char[i1];
+                    for (int i = 0; i < i1; i ++) n1[i] = n[i];
+                    String sn = new String(n1);
+                    N = Integer.parseInt(sn);
+                    if (N < 0 || N > 100) throw new NumberFormatException();
+                    reducePrcnt = N;
+                    reduceAlbino();
+                    String s = "Команда выполнена успешно.                                              ";
+                    pw.write(s.toCharArray());
+                }
+                catch (NumberFormatException nfe)
+                {
+                    String s = "Команда не выполнена: значение параметра должно быть числом от 0 до 100.";
+                    pw.write(s.toCharArray());
+                }
+            }
+            else
+            {
+                String s = "Команда не выполнена: ожидается ввод номера команды из списка.          ";
+                pw.write(s.toCharArray());
+            }
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        return N;
+    }
+
+    public synchronized void generate(long time)
     {
         for (int i = 0; i < count; i++)
         {
@@ -564,7 +725,7 @@ public class Habitat
         }
     }
 
-    public synchronized void draw(Graphics g, JPanel field)
+    public synchronized void draw(Graphics g)
     {
         //Двойная буфферизация в BufferedImage (устранение мерцания)
         int w = field.getWidth(), h = field.getHeight();
@@ -576,16 +737,52 @@ public class Habitat
         g.drawImage(fieldImage,0,0,w,h,null);
     }
 
-    private synchronized void Update(long time, Graphics g, JPanel field)
+    public void reduceAlbino()
     {
-        generate(time,field);
-        draw(g, field);
+        if (reducePrcnt != 0)
+        {
+            int rp = 0;
+            int ac = Albino.count;
+            for (int i = 0; i < count; i++)
+            {
+                int reduceA = (ac * reducePrcnt)/100;
+                if (rp >= reduceA) break;
+                if (rabbitVector.getRabbit(i).type == 'a')
+                {
+                    int id = rabbitVector.getRabbit(i).ID;
+                    timeHashMap.remove(id);
+                    ID_tree.remove(id);
+                    rabbitVector.getRabbit(i).die();
+                    rabbitVector.remove(i);
+                    count--;
+                    rp++;
+                }
+            }
+            draw(field.getGraphics());
+        }
+    }
+
+    private synchronized void Update(long time, Graphics g)
+    {
+        generate(time);
+        draw(g);
+        try
+        {
+            if (pr.ready())
+            {
+                int cn = pr.read();
+                if (cn != 0) reducePrcnt = consoleReadCommand((char)cn);
+            }
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     private void startMethod(Container container)
     {
         JPanel controlPanel = (JPanel) container.getComponent(0);
-        Component field = container.getComponent(1);
         Component start = controlPanel.getComponent(0);
         Component stop = controlPanel.getComponent(1);
         JTextArea time_text = (JTextArea)controlPanel.getComponent(6);
@@ -598,7 +795,7 @@ public class Habitat
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    Update(time, field.getGraphics(), (JPanel) field);
+                    Update(time, field.getGraphics());
                     time += 1000;
                     time_text.setText("Время: " + (time/1000) + " секунд(ы)");
                 }
