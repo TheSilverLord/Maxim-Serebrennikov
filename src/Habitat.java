@@ -7,7 +7,7 @@ import java.io.*;
 import java.util.*;
 import java.util.Timer;
 
-class Singleton_Vector
+class Singleton_Vector implements Serializable
 {
     private static Singleton_Vector instance;
     private Singleton_Vector(){}
@@ -25,6 +25,10 @@ class Singleton_Vector
     public Rabbit getRabbit(int index) { return vector.get(index); }
 
     public void remove(int index) { vector.remove(index); }
+
+    public void clear() { vector.clear(); }
+
+    public int size() { return vector.size(); }
 }
 
 class Singleton_TreeSet
@@ -47,6 +51,8 @@ class Singleton_TreeSet
     }
 
     public void remove(int id) { ID_tree.remove(id); }
+
+    public void clear() { ID_tree.clear(); }
 }
 
 class Singleton_HashMap
@@ -67,6 +73,8 @@ class Singleton_HashMap
     public void remove(int key) { timeHMap.remove(key); }
 
     public Set values() { return timeHMap.entrySet(); }
+
+    public void clear() { timeHMap.clear(); }
 }
 
 class TextAreaConsole extends TextArea implements Runnable
@@ -195,10 +203,6 @@ public class Habitat
             else throw new FileNotFoundException();
             config_reader.close();
         }
-        catch (NumberFormatException nfe)
-        {
-            nfe.printStackTrace();
-        }
         catch (Exception e)
         {
             N1 = 2000;
@@ -318,6 +322,11 @@ public class Habitat
         simMenu.add(startMI);
         JMenuItem stopMI = new JMenuItem("Стоп");
         simMenu.add(stopMI);
+        simMenu.addSeparator();
+        JMenuItem loadMI = new JMenuItem("Загрузить");
+        simMenu.add(loadMI);
+        JMenuItem saveMI = new JMenuItem("Сохранить");
+        simMenu.add(saveMI);
 
         JMenu settingsMenu = new JMenu("Параметры");
         JCheckBoxMenuItem showinfoMI = new JCheckBoxMenuItem("Показывать информацию");
@@ -499,6 +508,50 @@ public class Habitat
             stopMethod(container);
             frame.requestFocus();
         });
+        loadMI.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                stopMethod(container);
+                JFileChooser fc = new JFileChooser();
+                fc.showOpenDialog(frame);
+                File loadFile = fc.getSelectedFile();
+                try {
+                    ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(loadFile));
+                    rabbitVector.clear();
+                    ID_tree.clear();
+                    timeHashMap.clear();
+                    count = 0;
+                    rabbitVector = (Singleton_Vector)inputStream.readObject();
+                    inputStream.close();
+                    count = rabbitVector.size();
+                    for (int i = 0; i < count; i++)
+                    {
+                        rabbitVector.getRabbit(i).setBirthtime(time);
+                        ID_tree.add(rabbitVector.getRabbit(i));
+                        timeHashMap.add(rabbitVector.getRabbit(i));
+                    }
+                    draw(field.getGraphics());
+                } catch (IOException | ClassNotFoundException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        saveMI.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser fc = new JFileChooser();
+                fc.showOpenDialog(frame);
+                File saveFile = fc.getSelectedFile();
+                try {
+                    ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(saveFile));
+                    outputStream.writeObject(rabbitVector);
+                    outputStream.flush();
+                    outputStream.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
         showinfoMI.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -623,7 +676,7 @@ public class Habitat
         controlPanel.add(mark7);
         controlPanel.add(albPrt);
 
-        container.add(controlPanel, BorderLayout.EAST); // Номер 0 в контейнере container (не изменять)
+        container.add(controlPanel, BorderLayout.WEST); // Номер 0 в контейнере container (не изменять)
         container.add(field, BorderLayout.CENTER); // Номер 1 в контейнере container (не изменять)
 
         frame.setJMenuBar(mainMenu);
@@ -878,11 +931,12 @@ public class Habitat
 
     private void stopMethod(Container container)
     {
-        JPanel controlPanel = (JPanel) container.getComponent(0);
-        Component start = controlPanel.getComponent(0);
-        Component stop = controlPanel.getComponent(1);
         if (sim_is_working)
         {
+            JPanel controlPanel = (JPanel) container.getComponent(0);
+            Component start = controlPanel.getComponent(0);
+            Component stop = controlPanel.getComponent(1);
+
             timer.cancel();
             sim_is_working = false;
             start.setEnabled(true);
