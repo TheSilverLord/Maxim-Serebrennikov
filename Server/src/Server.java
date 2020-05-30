@@ -63,6 +63,25 @@ class ClientHandler extends Thread
         try
         {
             Update();
+            while (isLoggedIn)
+            {
+                int operationID = inputStream.readInt();
+                if (operationID == 1)
+                {
+                    Server.clients.remove(this);
+                    Server.count--;
+                    Update();
+                    isLoggedIn = false;
+                    System.out.println("Client was disconnected");
+                }
+                else if (operationID == 2)
+                {
+
+                }
+            }
+            inputStream.close();
+            outputStream.close();
+            socket.close();
         }
         catch (IOException e)
         {
