@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.Socket;
 import java.util.*;
 import java.util.Timer;
 
@@ -185,6 +186,9 @@ public class Habitat
     PipedReader pr;
     PipedWriter pw;
 
+    String host;
+    int port;
+
     public Habitat()
     {
         try
@@ -214,6 +218,9 @@ public class Habitat
         reducePrcnt = 0;
         count = 0;
         pr = new PipedReader();
+
+        host = "localhost";
+        port = 1024;
 
         try
         {
@@ -646,6 +653,24 @@ public class Habitat
                 }
             }
         });
+
+        // Соединение клиента с сервером и получение списка клиентов
+        StringBuffer clients = new StringBuffer();
+        try
+        {
+            Socket socket = new Socket(host, port);
+            DataInputStream dis = new DataInputStream(socket.getInputStream());
+            int c = dis.readInt();
+            for (int i = 0; i < c; i++)
+            {
+                if (i == 0) clients.append(dis.readUTF());
+                else clients.append("\n").append(dis.readUTF());
+            }
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
 
         ordAIbuttons.add(stopOrdinaryAI);
         ordAIbuttons.add(resumeOrdinaryAI);
