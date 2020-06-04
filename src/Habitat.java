@@ -191,8 +191,8 @@ public class Habitat
     String host;
     int port;
     Socket socket;
-    ObjectInputStream ois;
     ObjectOutputStream oos;
+    ObjectInputStream ois;
     Vector<String> clients;
 
     public Habitat()
@@ -661,13 +661,12 @@ public class Habitat
         });
 
         // Соединение клиента с сервером и получение списка клиентов
-        //Vector<String> clients = null;
         try
         {
             socket = new Socket(host, port);
             Thread.sleep(2000);
-            ois = new ObjectInputStream(socket.getInputStream());
             oos = new ObjectOutputStream(socket.getOutputStream());
+            ois = new ObjectInputStream(socket.getInputStream());
             Request r = (Request) ois.readObject();
             clients = new Vector<>((Vector)r.data);
         }

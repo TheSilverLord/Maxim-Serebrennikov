@@ -38,8 +38,8 @@ public class Server
 class ClientHandler extends Thread
 {
     private String name;
-    final ObjectInputStream inputStream;
     final ObjectOutputStream outputStream;
+    final ObjectInputStream inputStream;
     Socket socket;
     boolean isLoggedIn;
 
@@ -48,8 +48,8 @@ class ClientHandler extends Thread
     {
         this.name = name;
         this.socket = s;
-        this.inputStream = new ObjectInputStream(socket.getInputStream());
         this.outputStream = new ObjectOutputStream(socket.getOutputStream());
+        this.inputStream = new ObjectInputStream(socket.getInputStream());
         this.isLoggedIn = true;
     }
 
